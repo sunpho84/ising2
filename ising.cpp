@@ -37,7 +37,7 @@ int main()
   fprintf(gp,"unset key\n");
   fprintf(gp,"set style fill solid\n");
   
-  double beta=0.48;
+  double beta=0.38;
   int L=100;
   int N=L*L;
   int seed=23534634;
@@ -47,7 +47,7 @@ int main()
   mt19937 gen(seed);
   
   for(int& c : conf)
-    c=+1;
+    c=binomial_distribution<int>(1,0.5)(gen)*2-1;
   
   int nConfs=100;
   
@@ -104,6 +104,7 @@ int main()
       for(int site=0;site<N;site++)
 	if(conf[site]==-1)
 	  fprintf(gp,"%lg %lg 0.5 0.5\n",site%L+0.5,int(site/L)+0.5);
+      fprintf(gp,"e\n");
       fflush(gp);
       
       double mag=computeMagnetization(conf,L,N);
