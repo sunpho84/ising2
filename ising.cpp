@@ -2,11 +2,12 @@
 #include <unistd.h>
 #include <vector>
 #include <iostream>
-#include <chrono>
 
 using namespace std;
 
 #define PLOT
+
+#include <chrono>
 
 size_t totalTime=0;
 size_t computeEnTime=0;
