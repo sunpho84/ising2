@@ -2,8 +2,24 @@
 #include <unistd.h>
 #include <vector>
 #include <iostream>
+#include <chrono>
 
 using namespace std;
+
+#define PLOT
+
+size_t totalTime=0;
+size_t computeEnTime=0;
+
+auto now()
+{
+  return chrono::high_resolution_clock::now();
+}
+
+size_t timeFrom(chrono::high_resolution_clock::time_point from)
+{
+  return chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now()-from).count();
+}
 
 int computeEn(vector<int>& conf,int L,int N)
 {
@@ -22,6 +38,23 @@ int computeEn(vector<int>& conf,int L,int N)
   return en;
 }
 
+int computeSiteEn(vector<int>& conf,int L,int N,int iSite)
+{
+  int en=0;
+      int y=iSite/L;
+      int x=iSite%L;
+      
+      int neighSiteX=y*L+(x+1)%L;
+      int neighSiteX2=y*L+(x+L-1)%L;
+      int neighSiteY=((y+1)%L)*L+x;
+      int neighSiteY2=((y+L-1)%L)*L+x;
+      
+      en-=conf[neighSiteX]*conf[iSite]+conf[neighSiteY]*conf[iSite];
+      en-=conf[neighSiteX2]*conf[iSite]+conf[neighSiteY2]*conf[iSite];
+  
+  return en;
+}
+
 double computeMagnetization(vector<int>& conf,int L,int N)
 {
   int mag=0;
@@ -33,14 +66,16 @@ double computeMagnetization(vector<int>& conf,int L,int N)
 
 int main()
 {
+#ifdef PLOT
   FILE* gp=popen("gnuplot","w");
   fprintf(gp,"unset key\n");
   fprintf(gp,"set style fill solid\n");
+#endif
   
-  double beta=0.38;
-  int L=100;
+  double beta=1.4407228;
+  int L=20;
   int N=L*L;
-  int seed=23534634;
+  int seed=124634;
   
   vector<int> conf(N);
   
@@ -49,7 +84,9 @@ int main()
   for(int& c : conf)
     c=binomial_distribution<int>(1,0.5)(gen)*2-1;
   
-  int nConfs=100;
+  int nConfs=10;
+  
+  auto beginProgTime=now();
   
   /** Produce nConfs */
   for(int iConf=0;iConf<nConfs;iConf++)
@@ -62,7 +99,7 @@ int main()
 	  int backupSiteState=conf[iSite];
 	  
 	  // cout<<"Before: "<<conf[iSite]<<endl;
-	  int enBefore=computeEn(conf,L,N);
+	  int enBefore=computeSiteEn(conf,L,N,iSite);
 	  // cout<<"enBefore: "<<enBefore<<endl;
 	  binomial_distribution siteDistr(1,0.5);
 	  if(siteDistr(gen)==0)
@@ -71,8 +108,10 @@ int main()
 	    conf[iSite]=+1;
 	  
 	  // cout<<"After: "<<conf[iSite]<<endl;
-	  int enAfter=computeEn(conf,L,N);
+	  auto beginEnMeas=now();
+	  int enAfter=computeSiteEn(conf,L,N,iSite);
 	  // cout<<"enAfter: "<<enAfter<<endl;
+	  computeEnTime+=timeFrom(beginEnMeas);
 	  
 	  int eDiff=enAfter-enBefore;
 	  // cout<<"eDiff: "<<eDiff<<endl;
@@ -99,13 +138,15 @@ int main()
 	      // 	cout<<"Accepted"<<endl;
 	    }
 	}
-      
+
+#ifdef PLOT
       fprintf(gp,"plot '-' w boxxyerror\n");
       for(int site=0;site<N;site++)
 	if(conf[site]==-1)
 	  fprintf(gp,"%lg %lg 0.5 0.5\n",site%L+0.5,int(site/L)+0.5);
       fprintf(gp,"e\n");
       fflush(gp);
+#endif
       
       double mag=computeMagnetization(conf,L,N);
       cout<<"Mag "<<mag<<endl;
@@ -113,7 +154,14 @@ int main()
       //sleep(1);
     }
   
+  totalTime+=timeFrom(beginProgTime);
+  
+  cout<<"TotalTime: "<<totalTime/1e9<<" s"<<endl;
+  cout<<"ComputeEnergyTime: "<<computeEnTime/1e9<<" s"<<endl;
+  
+#ifdef PLOT
   pclose(gp);
+#endif
   
   return 0;
 }
