@@ -1,3 +1,7 @@
+computing energy
+---
+https://github.com/sunpho84/ising2/blob/3fcf39cacf9bbe198e10f4dc4429489e3f3173be/ising.cpp#L25-L40
+
 gnuplot 
 ---
 
