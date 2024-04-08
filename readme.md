@@ -9,3 +9,19 @@ https://github.com/sunpho84/ising2/blob/badff1a75cebbd88a37eb5920fcfe5f940e1d2a5
 
 close before the program ends
 https://github.com/sunpho84/ising2/blob/badff1a75cebbd88a37eb5920fcfe5f940e1d2a5/ising.cpp#L115-L119
+
+
+timings
+---
+
+Define measurement and time difference
+https://github.com/sunpho84/ising2/blob/c30de05d38626f877cc70bb3ef1f6bc1f5614c90/ising.cpp#L10-L24
+
+Taking time
+https://github.com/sunpho84/ising2/blob/c30de05d38626f877cc70bb3ef1f6bc1f5614c90/ising.cpp#L90
+
+Measuring compute energy
+https://github.com/sunpho84/ising2/blob/c30de05d38626f877cc70bb3ef1f6bc1f5614c90/ising.cpp#L112-L115
+
+Printing
+https://github.com/sunpho84/ising2/blob/c30de05d38626f877cc70bb3ef1f6bc1f5614c90/ising.cpp#L160-L161
