@@ -5,22 +5,52 @@
 
 using namespace std;
 
-#define PLOT
+//#define PLOT
 
 #include <chrono>
 
-size_t totalTime=0;
-size_t computeEnTime=0;
-
-auto now()
+struct timer
 {
-  return chrono::high_resolution_clock::now();
-}
+  static timer timerCost;
+  
+  static auto now()
+  {
+    return chrono::high_resolution_clock::now();
+  }
+  
+  size_t tot=0;
+  
+  size_t n=0;
+  
+  chrono::high_resolution_clock::time_point from;
+  
+  void start()
+  {
+    n++;
+    from=now();
+  }
+  
+  void stop()
+  {
+    tot+=chrono::duration_cast<chrono::nanoseconds>(now()-from).count();
+  }
+  
+  double get(bool sub=true)
+  {
+    double res=tot;
+    if(sub)
+      res-=timerCost.tot*(double)n/timerCost.n;
+    
+    return res/1e9;
+  }
+};
 
-size_t timeFrom(chrono::high_resolution_clock::time_point from)
-{
-  return chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now()-from).count();
-}
+timer timer::timerCost;
+
+timer totalTime;
+timer computeEnTime;
+timer computeMagTime;
+timer rndGenTime;
 
 int computeEn(vector<int>& conf,int L,int N)
 {
@@ -41,6 +71,7 @@ int computeEn(vector<int>& conf,int L,int N)
 
 int computeSiteEn(vector<int>& conf,int L,int N,int iSite)
 {
+  computeEnTime.start();
   int en=0;
       int y=iSite/L;
       int x=iSite%L;
@@ -53,6 +84,7 @@ int computeSiteEn(vector<int>& conf,int L,int N,int iSite)
       en-=conf[neighSiteX]*conf[iSite]+conf[neighSiteY]*conf[iSite];
       en-=conf[neighSiteX2]*conf[iSite]+conf[neighSiteY2]*conf[iSite];
   
+      computeEnTime.stop();
   return en;
 }
 
@@ -73,21 +105,28 @@ int main()
   fprintf(gp,"set style fill solid\n");
 #endif
   
-  double beta=1.4407228;
-  int L=20;
+  double beta=1;//.4407228;
+  int L=40;
   int N=L*L;
   int seed=124634;
   
   vector<int> conf(N);
-  
-  mt19937 gen(seed);
+
+  using Gen=minstd_rand0;
+  Gen gen(seed);
   
   for(int& c : conf)
     c=binomial_distribution<int>(1,0.5)(gen)*2-1;
   
-  int nConfs=10;
+  int nConfs=10000;
   
-  auto beginProgTime=now();
+  totalTime.start();
+  
+  for(size_t i=0;i<10000000;i++)
+    {
+      timer::timerCost.start();
+      timer::timerCost.stop();
+    }
   
   /** Produce nConfs */
   for(int iConf=0;iConf<nConfs;iConf++)
@@ -102,17 +141,18 @@ int main()
 	  // cout<<"Before: "<<conf[iSite]<<endl;
 	  int enBefore=computeSiteEn(conf,L,N,iSite);
 	  // cout<<"enBefore: "<<enBefore<<endl;
+	  
+	  rndGenTime.start();
 	  binomial_distribution siteDistr(1,0.5);
 	  if(siteDistr(gen)==0)
 	    conf[iSite]=-1;
 	  else
 	    conf[iSite]=+1;
+	  rndGenTime.stop();
 	  
 	  // cout<<"After: "<<conf[iSite]<<endl;
-	  auto beginEnMeas=now();
 	  int enAfter=computeSiteEn(conf,L,N,iSite);
 	  // cout<<"enAfter: "<<enAfter<<endl;
-	  computeEnTime+=timeFrom(beginEnMeas);
 	  
 	  int eDiff=enAfter-enBefore;
 	  // cout<<"eDiff: "<<eDiff<<endl;
@@ -127,8 +167,10 @@ int main()
 	      // cout<<"Pacc: "<<pAcc<<endl;
 	      binomial_distribution<int> distrAcc(1,pAcc);
 	      
+	      rndGenTime.start();
 	      int acc=distrAcc(gen);
 	      // cout<<"acc: "<<acc<<endl;
+	      rndGenTime.stop();
 	      
 	      if(acc==0)
 		{
@@ -139,7 +181,7 @@ int main()
 	      // 	cout<<"Accepted"<<endl;
 	    }
 	}
-
+      
 #ifdef PLOT
       fprintf(gp,"plot '-' w boxxyerror\n");
       for(int site=0;site<N;site++)
@@ -149,16 +191,21 @@ int main()
       fflush(gp);
 #endif
       
+      computeMagTime.start();
       double mag=computeMagnetization(conf,L,N);
+      computeMagTime.stop();
       cout<<"Mag "<<mag<<endl;
       
       //sleep(1);
     }
   
-  totalTime+=timeFrom(beginProgTime);
+  totalTime.stop();
   
-  cout<<"TotalTime: "<<totalTime/1e9<<" s"<<endl;
-  cout<<"ComputeEnergyTime: "<<computeEnTime/1e9<<" s"<<endl;
+  cout<<"TotalTime: "<<totalTime.get()<<" s"<<endl;
+  cout<<"ComputeEnergyTime: "<<computeEnTime.get()<<" s"<<endl;
+  cout<<"ComputeMagnetizationTime: "<<computeMagTime.get()<<" s"<<endl;
+  cout<<"RandomGenTime: "<<rndGenTime.get()<<" s"<<endl;
+  cout<<"BenchTime: "<<timer::timerCost.get(false)/timer::timerCost.n<<" s"<<endl;
   
 #ifdef PLOT
   pclose(gp);
