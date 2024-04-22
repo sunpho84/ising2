@@ -106,21 +106,22 @@ int main()
 #endif
   
   double beta=1;//.4407228;
-  int L=40;
+  int L=atoi(arg[1]);
   int N=L*L;
   int seed=124634;
   
   vector<int> conf(N);
-
-  using Gen=minstd_rand0;
-  Gen gen(seed);
   
-  for(int& c : conf)
-    c=binomial_distribution<int>(1,0.5)(gen)*2-1;
+  using Gen=sitmo::prng_engine;
+  // using Gen=mt19937_64;
+  std::vector<Gen> gens(N);
+  for(size_t i=0;i<N;i++)
+    gens[i].seed(seed+i);
   
-  int nConfs=10000;
+  for(size_t i=0;i<N;i++)
+    conf[i]=binomial_distribution<int>(1,0.5)(gens[i])*2-1;
   
-  totalTime.start();
+  int nConfs=100;
   
   for(size_t i=0;i<10000000;i++)
     {
