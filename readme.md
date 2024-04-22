@@ -32,3 +32,15 @@ https://github.com/sunpho84/ising2/blob/c30de05d38626f877cc70bb3ef1f6bc1f5614c90
 
 it can be needed to change `high_resolution_clock` into `steady_clock`
 
+
+
+Assignement
+-----------
+
+1) description of the system
+2) description of the algorithm
+3) plot of the simulation in the cold/hot phase
+4) scaling of the time with the volume in the range L = 8 - 128
+5) parallelization of the energy calculation: verify the reproducibility (same result is pbtained every time the code is run)
+6) scaling of the time with the number of threads in two regimes: small and large volume
+7) point out the different behavior in the two regimes
