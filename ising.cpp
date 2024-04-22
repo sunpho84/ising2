@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <vector>
 #include <iostream>
+#include <omp.h>
+
 
 using namespace std;
 
@@ -55,6 +57,7 @@ timer rndGenTime;
 int computeEn(vector<int>& conf,int L,int N)
 {
   int en=0;
+#pragma omp parallel for reduction(+:en)
   for(int iSite=0;iSite<N;iSite++)
     {
       int y=iSite/L;
@@ -104,6 +107,8 @@ int main()
   fprintf(gp,"unset key\n");
   fprintf(gp,"set style fill solid\n");
 #endif
+  
+  cout<<"Maximal number of threads to be used: "<<omp_get_max_threads()<<endl;
   
   double beta=1;//.4407228;
   int L=atoi(arg[1]);
