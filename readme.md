@@ -33,6 +33,19 @@ https://github.com/sunpho84/ising2/blob/c30de05d38626f877cc70bb3ef1f6bc1f5614c90
 it can be needed to change `high_resolution_clock` into `steady_clock`
 
 
+Thread parallelization
+----------------------
+
+```
+g++ -o ising ising.cpp -fopenmp -O3 -Wall
+```
+
+launching to change the number of threads
+
+```
+OMP_NUM_THREADS=4 ./ising 40
+```
+
 
 Assignement
 -----------
