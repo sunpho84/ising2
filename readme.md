@@ -47,8 +47,8 @@ OMP_NUM_THREADS=4 ./ising 40
 ```
 
 
-Assignement
------------
+Assignement Lect 5
+-------------------
 
 1) description of the system
 2) description of the algorithm
@@ -68,3 +68,7 @@ OMP_NUM_THREADS=4 OMP_PROC_BIND=true ./ising
 OMP_NUM_THREADS=4 OMP_PROC_BIND=true OMP_PLACES=1,2,3,4 ./ising
 ```
 
+Scaling Lect 6
+--------------
+Show the strong scaling behavior of your code `T*N` as a function of `N` where `T` is the time and `N` is the number of threads, under the regime of small/large volume.
+Alternatively, show the weak scaling of your code `T` as function of `N`, starting from a small/large volume at `N=1`.
