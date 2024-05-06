@@ -76,3 +76,15 @@ Alternatively, show the weak scaling of your code `T` as function of `N`, starti
 workstation modeset
 -------------------
 scl enable devtoolset-11 bash
+
+Scaling Lect 9
+--------------
+
+Parallelizing the algorithm
+https://github.com/sunpho84/ising2/blob/a05af48f8239c9a067b54f64574affdab304533e/ising.cpp#L140-L145
+
+Parallelizing the random number generator
+https://github.com/sunpho84/ising2/blob/a05af48f8239c9a067b54f64574affdab304533e/ising.cpp#L121-L124
+
+Using the local random generator
+https://github.com/sunpho84/ising2/blob/a05af48f8239c9a067b54f64574affdab304533e/ising.cpp#L156
