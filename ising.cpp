@@ -117,9 +117,7 @@ int main()
   
   vector<int> conf(N);
   
-  using Gen=sitmo::prng_engine;
-  // using Gen=mt19937_64;
-  std::vector<Gen> gens(N);
+  // using Gen=sitmo::prng_engine;
   using Gen=mt19937_64;
   vector<Gen> gens(N);
   for(size_t i=0;i<N;i++)
@@ -140,59 +138,58 @@ int main()
   for(int iConf=0;iConf<nConfs;iConf++)
     {
       /** Update each esite*/
-      for(int iSite=0;iSite<N;iSite++)
-	{
-	  // cout<<"Looping on site "<<iSite<<endl; 
-	  
-	  int backupSiteState=conf[iSite];
-	  
-	  // cout<<"Before: "<<conf[iSite]<<endl;
-	  int enBefore=computeSiteEn(conf,L,N,iSite);
-	  // cout<<"enBefore: "<<enBefore<<endl;
-	  
-	  rndGenTime.start();
-	  binomial_distribution siteDistr(1,0.5);
-	    conf[iSite]=-1;
-	  else
-	    conf[iSite]=+1;
-	  rndGenTime.stop();
-	  
-	  // cout<<"After: "<<conf[iSite]<<endl;
-	  int enAfter=computeSiteEn(conf,L,N,iSite);
-	  // cout<<"enAfter: "<<enAfter<<endl;
-	  
-	  int eDiff=enAfter-enBefore;
-	  // cout<<"eDiff: "<<eDiff<<endl;
-	  
-	  if(eDiff<=0)
-	    // cout<<"Accepted as energy is decreasing"<<endl
-	    ;
-	  else
       for(int par=0;par<2;par++)
 	#pragma omp parallel for
 	for(int iSite=0;iSite<N;iSite++)
 	  if((iSite%L+iSite/L)%2==par)
 	    {
-	      double pAcc=exp(-beta*eDiff);
+	      // cout<<"Looping on site "<<iSite<<endl; 
 	      
-	      // cout<<"Pacc: "<<pAcc<<endl;
-	      binomial_distribution<int> distrAcc(1,pAcc);
+	      int backupSiteState=conf[iSite];
 	      
-	      rndGenTime.start();
-	      int acc=distrAcc(gen);
-	      // cout<<"acc: "<<acc<<endl;
-	      rndGenTime.stop();
+	      // cout<<"Before: "<<conf[iSite]<<endl;
+	      int enBefore=computeEn(conf,L,N);
+	      // cout<<"enBefore: "<<enBefore<<endl;
 	      
-	      if(acc==0)
+	      // rndGenTime.start();
+	      binomial_distribution siteDistr(1,0.5);
 	      if(siteDistr(gens[iSite])==0)
+		conf[iSite]=-1;
+	      else
+		conf[iSite]=+1;
+	      // rndGenTime.stop();
+	      
+	      // cout<<"After: "<<conf[iSite]<<endl;
+	      int enAfter=computeEn(conf,L,N);
+	      // cout<<"enAfter: "<<enAfter<<endl;
+	      
+	      int eDiff=enAfter-enBefore;
+	      // cout<<"eDiff: "<<eDiff<<endl;
+	      
+	      if(eDiff<=0)
+		// cout<<"Accepted as energy is decreasing"<<endl
+		;
+	      else
 		{
-		  conf[iSite]=backupSiteState;
-		  // cout<<"Not accepted"<<endl;
+		  double pAcc=exp(-beta*eDiff);
+		  
+		  // cout<<"Pacc: "<<pAcc<<endl;
+		  binomial_distribution<int> distrAcc(1,pAcc);
+		  
+		  // rndGenTime.start();
+		  int acc=distrAcc(gens[iSite]);
+		  // cout<<"acc: "<<acc<<endl;
+		  // rndGenTime.stop();
+		  
+		  if(acc==0)
+		    {
+		      conf[iSite]=backupSiteState;
+		      // cout<<"Not accepted"<<endl;
+		    }
+		  // else
+		  // 	cout<<"Accepted"<<endl;
 		}
-	      // else
-	      // 	cout<<"Accepted"<<endl;
 	    }
-	}
       
 #ifdef PLOT
       fprintf(gp,"plot '-' w boxxyerror\n");
