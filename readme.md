@@ -72,3 +72,7 @@ Scaling Lect 6
 --------------
 Show the strong scaling behavior of your code `T*N` as a function of `N` where `T` is the time and `N` is the number of threads, under the regime of small/large volume.
 Alternatively, show the weak scaling of your code `T` as function of `N`, starting from a small/large volume at `N=1`.
+
+workstation modeset
+-------------------
+scl enable devtoolset-11 bash
