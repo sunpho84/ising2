@@ -120,6 +120,8 @@ int main()
   using Gen=sitmo::prng_engine;
   // using Gen=mt19937_64;
   std::vector<Gen> gens(N);
+  using Gen=mt19937_64;
+  vector<Gen> gens(N);
   for(size_t i=0;i<N;i++)
     gens[i].seed(seed+i);
   
@@ -150,7 +152,6 @@ int main()
 	  
 	  rndGenTime.start();
 	  binomial_distribution siteDistr(1,0.5);
-	  if(siteDistr(gen)==0)
 	    conf[iSite]=-1;
 	  else
 	    conf[iSite]=+1;
@@ -167,6 +168,10 @@ int main()
 	    // cout<<"Accepted as energy is decreasing"<<endl
 	    ;
 	  else
+      for(int par=0;par<2;par++)
+	#pragma omp parallel for
+	for(int iSite=0;iSite<N;iSite++)
+	  if((iSite%L+iSite/L)%2==par)
 	    {
 	      double pAcc=exp(-beta*eDiff);
 	      
@@ -179,6 +184,7 @@ int main()
 	      rndGenTime.stop();
 	      
 	      if(acc==0)
+	      if(siteDistr(gens[iSite])==0)
 		{
 		  conf[iSite]=backupSiteState;
 		  // cout<<"Not accepted"<<endl;
