@@ -65,9 +65,6 @@ int main()
       /** Updates all sites */
       for(size_t iSite=0;iSite<N;iSite++)
 	{
-	  /** Keeps note of the old spin */
-	  const int backupSiteState=conf[iSite];
-	  
 	  /** Computes energy before the change */
 	  const int enBefore=computeEn(conf);
 	  
@@ -78,8 +75,11 @@ int main()
 	  else
 	    conf[iSite]=+1;
 	  
+	  /** Configuration */
+	  vector<int> newConf=conf;
+	  
 	  /** Computes energy after the change */
-	  const int enAfter=computeEn(conf);
+	  const int enAfter=computeEn(newConf);
 	  
 	  /** Computes energy difference */
 	  const int eDiff=enAfter-enBefore;
@@ -91,8 +91,8 @@ int main()
 	  const int acc=binomial_distribution<int>(1,pAcc)(gen);
 	  
 	  /** If not accepted, bring back the original site*/
-	  if(acc==0)
-	    conf[iSite]=backupSiteState;
+	  if(acc)
+	    newConf=conf;
 	}
       
       /** Plot the configuration */
