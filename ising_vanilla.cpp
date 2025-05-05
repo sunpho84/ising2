@@ -68,18 +68,18 @@ int main()
 	  /** Computes energy before the change */
 	  const int enBefore=computeEn(conf);
 	  
+	  /** Test configuration */
+	  vector<int> testConf=conf;
+	  
 	  /** Draw a fair binomial distribitution, 0 or 1 with probability 50% */
 	  binomial_distribution siteDistr(1,0.5);
 	  if(siteDistr(gen)==0)
-	    conf[iSite]=-1;
+	    testConf[iSite]=-1;
 	  else
-	    conf[iSite]=+1;
-	  
-	  /** Configuration */
-	  vector<int> newConf=conf;
+	    testConf[iSite]=+1;
 	  
 	  /** Computes energy after the change */
-	  const int enAfter=computeEn(newConf);
+	  const int enAfter=computeEn(testConf);
 	  
 	  /** Computes energy difference */
 	  const int eDiff=enAfter-enBefore;
@@ -92,7 +92,7 @@ int main()
 	  
 	  /** If not accepted, bring back the original site*/
 	  if(acc)
-	    newConf=conf;
+	    conf=testConf;
 	}
       
       /** Plot the configuration */
