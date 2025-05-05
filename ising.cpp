@@ -4,10 +4,11 @@
 #include <iostream>
 #include <omp.h>
 
+#include "prng_engine.hpp"
 
 using namespace std;
 
-//#define PLOT
+#define PLOT
 
 #include <chrono>
 
@@ -50,14 +51,15 @@ struct timer
 timer timer::timerCost;
 
 timer totalTime;
-timer computeEnTime;
-timer computeMagTime;
-timer rndGenTime;
+// timer computeEnTime;
+// timer computeMagTime;
+// timer rndGenTime;
 
 int computeEn(vector<int>& conf,int L,int N)
 {
+  // computeEnTime.start();
   int en=0;
-#pragma omp parallel for reduction(+:en)
+  //#pragma omp parallel for reduction(+:en)
   for(int iSite=0;iSite<N;iSite++)
     {
       int y=iSite/L;
@@ -69,25 +71,26 @@ int computeEn(vector<int>& conf,int L,int N)
       en-=conf[neighSiteX]*conf[iSite]+conf[neighSiteY]*conf[iSite];
     }
   
+      // computeEnTime.stop();
   return en;
 }
 
 int computeSiteEn(vector<int>& conf,int L,int N,int iSite)
 {
-  computeEnTime.start();
+  // computeEnTime.start();
   int en=0;
-      int y=iSite/L;
-      int x=iSite%L;
-      
-      int neighSiteX=y*L+(x+1)%L;
-      int neighSiteX2=y*L+(x+L-1)%L;
-      int neighSiteY=((y+1)%L)*L+x;
-      int neighSiteY2=((y+L-1)%L)*L+x;
-      
-      en-=conf[neighSiteX]*conf[iSite]+conf[neighSiteY]*conf[iSite];
-      en-=conf[neighSiteX2]*conf[iSite]+conf[neighSiteY2]*conf[iSite];
+  int y=iSite/L;
+  int x=iSite%L;
   
-      computeEnTime.stop();
+  int neighSiteX=y*L+(x+1)%L;
+  int neighSiteX2=y*L+(x+L-1)%L;
+  int neighSiteY=((y+1)%L)*L+x;
+  int neighSiteY2=((y+L-1)%L)*L+x;
+  
+  en-=conf[neighSiteX]*conf[iSite]+conf[neighSiteY]*conf[iSite];
+  en-=conf[neighSiteX2]*conf[iSite]+conf[neighSiteY2]*conf[iSite];
+  
+  // computeEnTime.stop();
   return en;
 }
 
@@ -100,19 +103,27 @@ double computeMagnetization(vector<int>& conf,int L,int N)
   return (double)mag/N;
 }
 
-int main()
+int main(int narg,char **arg)
 {
+  if(narg<2)
+    {
+      cerr<<"Use "<<arg[0]<<" L "<<endl;
+      exit(0);
+    }
+  
 #ifdef PLOT
   FILE* gp=popen("gnuplot","w");
   fprintf(gp,"unset key\n");
   fprintf(gp,"set style fill solid\n");
 #endif
   
+  /** omp_set_num_threads(4); */
+  
   cout<<"Maximal number of threads to be used: "<<omp_get_max_threads()<<endl;
   
-  double beta=1;//.4407228;
-  int L=atoi(arg[1]);
-  int N=L*L;
+  double beta=0.9;//.4407228;
+  size_t L=atoi(arg[1]);
+  size_t N=L*L;
   int seed=124634;
   
   vector<int> conf(N);
@@ -126,7 +137,7 @@ int main()
   for(size_t i=0;i<N;i++)
     conf[i]=binomial_distribution<int>(1,0.5)(gens[i])*2-1;
   
-  int nConfs=100;
+  int nConfs=1000;
   
   for(size_t i=0;i<10000000;i++)
     {
@@ -134,13 +145,15 @@ int main()
       timer::timerCost.stop();
     }
   
+  totalTime.start();
+  
   /** Produce nConfs */
   for(int iConf=0;iConf<nConfs;iConf++)
     {
       /** Update each esite*/
-      for(int par=0;par<2;par++)
-	#pragma omp parallel for
-	for(int iSite=0;iSite<N;iSite++)
+      for(size_t par=0;par<2;par++)
+	//#pragma omp parallel for
+	for(size_t iSite=0;iSite<N;iSite++)
 	  if((iSite%L+iSite/L)%2==par)
 	    {
 	      // cout<<"Looping on site "<<iSite<<endl; 
@@ -193,27 +206,30 @@ int main()
       
 #ifdef PLOT
       fprintf(gp,"plot '-' w boxxyerror\n");
-      for(int site=0;site<N;site++)
+      for(size_t site=0;site<N;site++)
 	if(conf[site]==-1)
 	  fprintf(gp,"%lg %lg 0.5 0.5\n",site%L+0.5,int(site/L)+0.5);
       fprintf(gp,"e\n");
       fflush(gp);
 #endif
       
-      computeMagTime.start();
-      double mag=computeMagnetization(conf,L,N);
-      computeMagTime.stop();
-      cout<<"Mag "<<mag<<endl;
+      // computeMagTime.start();
+      // double mag=computeMagnetization(conf,L,N);
+      // computeMagTime.stop();
+      // cout<<"Mag "<<mag<<endl;
       
       //sleep(1);
     }
   
   totalTime.stop();
   
+  double mag=computeMagnetization(conf,L,N);
+  cout<<"Mag "<<mag<<endl;
+  
   cout<<"TotalTime: "<<totalTime.get()<<" s"<<endl;
-  cout<<"ComputeEnergyTime: "<<computeEnTime.get()<<" s"<<endl;
-  cout<<"ComputeMagnetizationTime: "<<computeMagTime.get()<<" s"<<endl;
-  cout<<"RandomGenTime: "<<rndGenTime.get()<<" s"<<endl;
+  // cout<<"ComputeEnergyTime: "<<computeEnTime.get()<<" s"<<endl;
+  // cout<<"ComputeMagnetizationTime: "<<computeMagTime.get()<<" s"<<endl;
+  // cout<<"RandomGenTime: "<<rndGenTime.get()<<" s"<<endl;
   cout<<"BenchTime: "<<timer::timerCost.get(false)/timer::timerCost.n<<" s"<<endl;
   
 #ifdef PLOT
