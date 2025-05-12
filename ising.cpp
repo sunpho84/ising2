@@ -15,7 +15,8 @@ const int nConfs=1000;
 int computeEn(const vector<int>& conf)
 {
   int en=0;
-  
+
+  #pragma omp parallel for reduction(+:en)
   for(size_t iSite=0;iSite<N;iSite++)
     {
       /** Coverts to coordinate */
