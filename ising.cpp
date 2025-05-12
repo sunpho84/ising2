@@ -1,6 +1,7 @@
 #include <random>
 #include <vector>
 #include <cstdio>
+#include <omp.h>
 
 using namespace std;
 
@@ -46,6 +47,9 @@ double computeMagnetization(const vector<int>& conf)
 
 int main()
 {
+printf("NThreads: %d\n",omp_get_max_threads());
+
+	
 #ifdef PLOT
   /** Open the plot */
   FILE* gp=popen("gnuplot","w");
