@@ -1,23 +1,62 @@
 #include <random>
 #include <vector>
 #include <cstdio>
+#include <chrono>
 #include <omp.h>
 
 using namespace std;
 
 /** For reference, critical beta is .4407228 */
 const double Beta=0.29;
-const size_t L=100;
+const size_t L=10;
 const size_t N=L*L;
 const int seed=124634;
-const int nConfs=1000;
+const int nConfs=10;
+
+struct timer
+{
+  static timer timerCost;
+  
+  static auto now()
+  {
+    return chrono::high_resolution_clock::now();
+  }
+  
+  size_t tot=0;
+  
+  size_t n=0;
+  
+  chrono::high_resolution_clock::time_point from;
+  
+  void start()
+  {
+    n++;
+    from=now();
+  }
+  
+  void stop()
+  {
+    tot+=chrono::duration_cast<chrono::nanoseconds>(now()-from).count();
+  }
+  
+  double get(bool sub=true)
+  {
+    double res=tot;
+    if(sub)
+      res-=timerCost.tot*(double)n/timerCost.n;
+    
+    return res/1e9;
+  }
+};
+
+timer timer::timerCost;
 
 /** Computes the energy */
 int computeEn(const vector<int>& conf)
 {
   int en=0;
-
-  #pragma omp parallel for reduction(+:en)
+  
+#pragma omp parallel for reduction(+:en)
   for(size_t iSite=0;iSite<N;iSite++)
     {
       /** Coverts to coordinate */
@@ -47,9 +86,18 @@ double computeMagnetization(const vector<int>& conf)
 
 int main()
 {
-printf("NThreads: %d\n",omp_get_max_threads());
-
-	
+  timer totalTime;
+  
+  for(size_t i=0;i<100000;i++)
+    {
+      timer::timerCost.start();
+      timer::timerCost.stop();
+    }
+  
+  totalTime.start();
+  
+ printf("NThreads: %d\n",omp_get_max_threads());
+  
 #ifdef PLOT
   /** Open the plot */
   FILE* gp=popen("gnuplot","w");
@@ -130,6 +178,10 @@ printf("NThreads: %d\n",omp_get_max_threads());
 #endif
   
   fclose(measFile);
+  
+  totalTime.stop();
+  
+  printf("Duration: %lg s\n",totalTime.get());
   
   return 0;
 }
