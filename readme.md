@@ -46,3 +46,9 @@ export OMP_DISPLAY_AFFINITY=true
 export OMP_DISPLAY_ENV=true
 OMP_NUM_THREADS=4 OMP_PROC_BIND=true ./ising L nConfs
 OMP_NUM_THREADS=4 OMP_PROC_BIND=true OMP_PLACES=1,2,3,4 ./ising L nConfs
+```
+
+CPU structure
+---
+
+![cpu](cpu.svg)
