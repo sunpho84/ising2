@@ -8,10 +8,10 @@ using namespace std;
 
 /** For reference, critical beta is .4407228 */
 const double Beta=0.29;
-const size_t L=10;
-const size_t N=L*L;
+size_t L;
+size_t N;
 const int seed=124634;
-const int nConfs=10;
+ int nConfs;
 
 struct timer
 {
@@ -84,8 +84,18 @@ double computeMagnetization(const vector<int>& conf)
   return (double)mag/N;
 }
 
-int main()
+int main(int narg,char** arg)
 {
+  if(narg<3)
+    {
+      fprintf(stderr,"Use %s L nConfs\n",arg[0]);
+      exit(1);
+    }
+  
+  L=atoi(arg[1]);
+  nConfs=atoi(arg[2]);
+  N=L*L;
+  
   timer totalTime;
   
   for(size_t i=0;i<100000;i++)
