@@ -47,6 +47,8 @@ export OMP_DISPLAY_ENV=true
 OMP_NUM_THREADS=4 OMP_PROC_BIND=true ./ising L nConfs
 OMP_NUM_THREADS=4 OMP_PROC_BIND=true OMP_PLACES={0,48} ./ising L nConfs
 ```
+in the list of places, the id of the core to be used is labelled with P#
+
 
 CPU structure
 ---
