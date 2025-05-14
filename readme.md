@@ -35,7 +35,7 @@ Assignement Lect 5
 3) plot of the simulation in the cold/hot phase
 4) scaling of the time with the volume in the range L = 8 - 128
 5) parallelization of the energy calculation: verify the reproducibility (same result is obtained every time the code is run)
-6) scaling of the time with the number of threads in two regimes: small and large volume, with different placement
+6) scaling of the time with the number of threads in two regimes: small and large volume, with different placement on cpu
 7) point out the different behavior in the two regimes
 
 
