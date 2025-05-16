@@ -54,3 +54,19 @@ CPU structure
 ---
 
 ![cpu](cpu.svg)
+
+
+Running different parameters
+---
+
+```
+$ cat pars.txt #L nconfs nthreads
+3 100 1
+3 100 2
+3 100 3
+3 100 4
+...
+
+$ while read L nconfs nthreads;do OMP_NUM_THREADS=$nthreads ./ising $L $nconfs;done < pars.txt
+```
+
