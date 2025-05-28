@@ -72,3 +72,11 @@ $ cat pars.txt #L nconfs nthreads
 $ while read L nconfs nthreads;do OMP_NUM_THREADS=$nthreads ./ising $L $nconfs;done < pars.txt
 ```
 
+or
+
+```bash
+for i in $(seq 1 16)
+do
+    OMP_NUM_THREADS=$i GOMP_CPU_AFFINITY="$(echo {1..48})" ./ising 300 1
+done
+```
