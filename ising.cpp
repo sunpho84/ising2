@@ -51,6 +51,28 @@ struct timer
 
 timer timer::timerCost;
 
+/** Computes the energy relative a given site */
+int computeEnSite(const vector<int>& conf,
+		  const size_t& iSite)
+{
+  int en=0;
+  
+  /** Coverts to coordinate */
+  const int y=iSite/L;
+  const int x=iSite%L;
+  
+  /** Computes the neighbor in the two directions */
+  const int neighSiteXUp=y*L+(x+1)%L;
+  const int neighSiteYUp=((y+1)%L)*L+x;
+  const int neighSiteXDw=y*L+(x+L-1)%L;
+  const int neighSiteYDw=((y+L-1)%L)*L+x;
+  
+  en-=conf[neighSiteXUp]*conf[iSite]+conf[neighSiteYUp]*conf[iSite];
+  en-=conf[neighSiteXDw]*conf[iSite]+conf[neighSiteYDw]*conf[iSite];
+  
+  return en;
+}
+
 /** Computes the energy */
 int computeEn(const vector<int>& conf)
 {
@@ -78,6 +100,7 @@ double computeMagnetization(const vector<int>& conf)
 {
   int mag=0;
   
+#pragma omp parallel for reduction(+:mag)
   for(size_t iSite=0;iSite<N;iSite++)
     mag+=conf[iSite];
   
@@ -104,8 +127,6 @@ int main(int narg,char** arg)
       timer::timerCost.stop();
     }
   
-  totalTime.start();
-  
  printf("NThreads: %d\n",omp_get_max_threads());
   
 #ifdef PLOT
@@ -113,7 +134,7 @@ int main(int narg,char** arg)
   FILE* gp=popen("gnuplot","w");
   fprintf(gp,"unset key\n");
   fprintf(gp,"set style fill solid\n");
-#endif 
+#endif
   /** Open the measurement file*/
   FILE* measFile=fopen("meas.txt","w");
   
@@ -121,42 +142,60 @@ int main(int narg,char** arg)
   vector<int> conf(N);
   
   /** Random number generator */
-  mt19937_64 gen(seed);
+  // mt19937_64 gen(seed);
   
-  /** Creates the distribution */
+  /** Local random number generator */
+  std::vector<mt19937_64> locGen(N);
+  for(size_t iSite=0;iSite<N;iSite++)
+    locGen[iSite].seed(seed+iSite);
+  
+  /** Creates the first configuration */
   for(size_t i=0;i<N;i++)
-    conf[i]=binomial_distribution<int>(1,0.5)(gen)*2-1;
+    conf[i]=binomial_distribution<int>(1,0.5)(locGen[i])*2-1;
+  
+  totalTime.start();
   
   /** Produce nConfs */
   for(int iConf=0;iConf<nConfs;iConf++)
     {
       /** Updates all sites */
-      for(size_t iSite=0;iSite<N;iSite++)
+      for(int par=0;par<2;par++)
 	{
-	  /** Creates the est configuration, first copying all sites */
-	  vector<int> testConf=conf;
-	  
-	  /** Draw a fair binomial distribitution, 0 or 1 with probability 50%, and assigns to the site */
-	  testConf[iSite]=binomial_distribution(1,0.5)(gen)*2-1;
-	  
-	  /** Computes energy of the old conf */
-	  const int enBefore=computeEn(conf);
-	  
-	  /** Computes energy of the new conf */
-	  const int enAfter=computeEn(testConf);
-	  
-	  /** Computes energy difference */
-	  const int eDiff=enAfter-enBefore;
-	  
-	  /** Computes the acceptance probability */
-	  const double pAcc=std::min(1.0,exp(-Beta*eDiff));
-	  
-	  /** Draw acceptance from the binomali distribution with probability pAcc */
-	  const int acc=binomial_distribution<int>(1,pAcc)(gen);
-	  
-	  /** If not accepted, bring back the original site*/
-	  if(acc)
-	    conf=testConf;
+#pragma omp parallel for
+	  for(size_t iSite=0;iSite<N;iSite++)
+	    {
+	      const int y=iSite/L;
+	      const int x=iSite%L;
+	      const int pSite=(x+y)%2;
+
+	      if(par==pSite)
+		{
+		  /** Store the initial state of the site */
+		  const int oldVal=conf[iSite];
+		  
+		  /** Computes energy of the old conf, relative to the site*/
+		  const int enBefore=computeEnSite(conf,iSite);
+		  
+		  /** Draw a fair binomial distribitution, 0 or 1 with probability 50%, and assigns to the site */
+		  conf[iSite]=binomial_distribution(1,0.5)(locGen[iSite])*2-1;
+		  
+		  /** Computes energy of the new conf, rleative to the site */
+		  const int enAfter=computeEnSite(conf,iSite);
+		  
+		  /** Computes energy difference */
+		  const int eDiff=enAfter-enBefore;
+		  
+		  /** Computes the acceptance probability */
+		  const double pAcc=std::min(1.0,exp(-Beta*eDiff));
+		  
+		  /** Draw acceptance from the binomial distribution with probability pAcc */
+		  const int acc=binomial_distribution<int>(1,pAcc)(locGen[iSite]);
+		  
+		  /** If not accepted, bring back the original site*/
+		  if(not acc)
+		    conf[iSite]=oldVal;
+		}
+	    }
 	}
       
 #ifdef PLOT
