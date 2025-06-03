@@ -130,9 +130,9 @@ int main(int narg,char** arg)
       timer::timerCost.start();
       timer::timerCost.stop();
     }
-
+  
   const size_t nThreads=omp_get_max_threads();
- printf("NThreads: %zu\n",nThreads);
+  printf("NThreads: %zu\n",nThreads);
   
 #ifdef PLOT
   /** Open the plot */
@@ -149,12 +149,13 @@ int main(int narg,char** arg)
 #ifdef PARALLEL_RNG
   /** Parallel random number generator */
   prng_engine gen(seed);
+  printf("Memory usage of the rng: %zu Bytes\n",sizeof(prng_engine));
 #else
   /** Local random number generator */
   std::vector<mt19937_64> gen(N);
   for(size_t iSite=0;iSite<N;iSite++)
     gen[iSite].seed(seed+iSite);
-  printf("Memory usage of the rng: %zu Mb\n",N*sizeof(mt19937_64)/(1<<20));
+  printf("Memory usage of the rng: %zu MB\n",N*sizeof(mt19937_64)/(1<<20));
 #endif
   
   /** Creates the first configuration */
