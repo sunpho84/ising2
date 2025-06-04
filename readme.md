@@ -46,7 +46,8 @@ export OMP_DISPLAY_AFFINITY=true
 export OMP_DISPLAY_ENV=true
 #OMP_NUM_THREADS=4 OMP_PROC_BIND=true ./ising L nConfs
 #OMP_NUM_THREADS=4 OMP_PROC_BIND=true OMP_PLACES={0,48} ./ising L nConfs
-OMP_NUM_THREADS=4 GOMP_CPU_AFFINITY="0 1 2 3" ./ising L nConfs
+#OMP_NUM_THREADS=4 GOMP_CPU_AFFINITY="0 1 2 3" ./ising L nConfs
+OMP_NUM_THREADS=N GOMP_CPU_AFFINITY="$(echo {0..48})" ./ising L nConfs
 
 ```
 in the list of places, the id of the core to be used is labelled with P#
